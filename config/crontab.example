@@ -1,0 +1,14 @@
+# Cron job para backups automát
+# Ejecutar cada noche a las 3:00 AM
+
+0 3 * * * /usr/local/bin/backup-full.sh >> /var/log/backup-cron.log 2>&1
+
+# Limpiar logs antiguos (más de 7 días)
+0 4 * * * find /var/log -name "*.log" -mtime +7 -delete 2>/dev/null
+
+# Verificar espacio libre
+FREE_SPACE=$(df -h / | tail -1 | awk '{print $4}')
+if [ "${FREE_SPACE%G% -lt 5 ]; then
+    echo "[ERROR] Espacio insuficiente: ${FREE_SPACE}GB" >> /var/log/backup-cron.log
+    exit 1
+fi

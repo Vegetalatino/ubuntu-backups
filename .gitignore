@@ -1,0 +1,17 @@
+# Archivos y directorios a ignorar en backups
+
+*.tar.gz
+*.tar
+*.zip
+*.log
+*.tmp
+*.bak
+*.swp
+*.old
+
+# Directorios a ignorar
+borg-repo/
+backup-temp/
+.env
+node_modules/
+tmp/
