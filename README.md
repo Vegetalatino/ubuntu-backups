@@ -174,23 +174,79 @@ chmod +x restore.sh
 ```
 /root/.openclaw/workspace/ubuntu-backups/
 ├── scripts/
-│   ├── backup-full.sh           # Backup completo
-│   ├── backup-restore.sh        # Restauración
-│   └── backup-emergency-clean.sh # Limpieza
+│   ├── backup-full.sh              # Backup completo
+│   ├── backup-restore.sh           # Restauración
+│   ├── backup-emergency-clean.sh   # Limpieza de emergencia
+│   ├── backup-compare.sh           # Comparar backups
+│   ├── backup-dry-run.sh           # Prueba sin cambios
+│   ├── backup-test.sh              # Test de sistema
+│   ├── backup-start.sh             # Iniciar backup manual
+│   └── monitoring/                 # Sistema de monitoreo
+│       ├── backup-main-daemon.sh   # Daemon principal
+│       ├── backup-daemon-logged.sh # Daemon con logs
+│       ├── backup-monitor.sh       # Monitor de estado
+│       ├── estado-backup           # Ver estado
+│       └── enviar-reporte-backup   # Enviar email
 ├── docs/
-│   ├── RESTAURACION.md          # Guía detallada
-│   └── TROUBLESHOOTING.md       # Solución de problemas
+│   ├── RESTAURACION.md             # Guía detallada
+│   └── TROUBLESHOOTING.md          # Solución de problemas
 ├── config/
-│   ├── .env.example             # Template de secrets
-│   └── crontab.example          # Template de cron
-└── README.md                    # Este archivo
+│   ├── .env.example                # Template de secrets
+│   └── crontab.example             # Template de cron
+└── README.md                       # Este archivo
+
+/var/log/backup/
+├── backup.log                      # Log principal
+├── backup.status                   # Estado actual
+├── daemon.log                      # Log del daemon
+└── .email-sent-YYYYMMDD            # Marca de email enviado
 ```
 
 ## 🔍 Monitoreo
 
-- **Logs**: `/var/log/backup-full.log`
-- **Email**: Confirmación automática
-- **Google Drive**: Verificar archivos subidos
+### Sistema de monitoreo automático
+
+El sistema incluye un daemon de monitoreo que:
+- ✅ Verifica el estado del backup cada 5 minutos
+- ✅ Detecta cuando el backup termina
+- ✅ Envía email de confirmación automáticamente
+- ✅ Limpia logs antiguos después del email
+
+### Comandos de monitoreo
+
+```bash
+# Ver estado actual del backup
+estado-backup
+
+# Enviar email de reporte manualmente
+enviar-reporte-backup
+
+# Ver logs en tiempo real
+tail -f /var/log/backup/backup.log
+
+# Ver estado del backup
+cat /var/log/backup/backup.status
+```
+
+### Logs y limpieza
+
+- **Logs**: `/var/log/backup/backup.log`
+- **Estado**: `/var/log/backup/backup.status`
+- **Limpieza**: Automática al enviar email (mantiene últimas 100 líneas)
+- **Archivos temporales**: Eliminados automáticamente después de subir a Drive
+- **Logs antiguos**: Eliminados después de 7 días
+
+### Email automático
+
+Cuando el backup termina:
+1. ✅ Sistema detecta finalización
+2. ✅ Envía email con detalles (fecha, archivo, tamaño)
+3. ✅ Marca como enviado para no repetir
+4. ✅ Limpia logs automáticamente
+
+### Verificación manual
+
+- **Google Drive**: Verificar archivos subidos con `rclone ls gdrive:ubuntu-backups`
 - **Borg local**: `borg list /root/borg-repo`
 
 ## 📈 Tamaño típico

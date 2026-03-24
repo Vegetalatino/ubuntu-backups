@@ -1,0 +1,33 @@
+#!/bin/bash
+# Enviar reporte de backup manualmente
+
+source /root/.secrets/.env 2>/dev/null
+
+TOKEN=$(curl -s -X POST "https://oauth2.googleapis.com/token" \
+    -d "client_id=${GOOGLE_CLIENT_ID}" \
+    -d "client_secret=${GOOGLE_CLIENT_SECRET}" \
+    -d "refresh_token=${REFRESH_TOKEN}" \
+    -d "grant_type=refresh_token" | grep -o '"access_token":"[^"]*"' | cut -d'"' -f4)
+
+LATEST=$(rclone lsl gdrive:ubuntu-backups 2>/dev/null | grep "ubuntu-full" | tail -1)
+BACKUP_DATE=$(echo "$LATEST" | awk '{print $2}')
+BACKUP_SIZE=$(echo "$LATEST" | awk '{print $1}')
+BACKUP_FILE=$(echo "$LATEST" | awk '{print $4}')
+SIZE_GB=$(echo "scale=2; $BACKUP_SIZE / 1073741824" | bc 2>/dev/null || echo "$BACKUP_SIZE bytes")
+
+MSG="From: richardperes070797@gmail.com
+To: richardperes070797@gmail.com
+Subject: [OK] Backup Ubuntu - $(date '+%Y-%m-%d')
+
+Backup completado
+Fecha: $BACKUP_DATE
+Archivo: $BACKUP_FILE
+Tamano: ${SIZE_GB} GB
+Ubicacion: Google Drive"
+
+RAW=$(echo "$MSG" | base64 -w 0 | sed 's/+/-/g; s/\//_/g')
+
+curl -s -X POST "https://gmail.googleapis.com/gmail/v1/users/me/messages/send" \
+    -H "Authorization: Bearer $TOKEN" \
+    -H "Content-Type: application/json" \
+    -d "{\"raw\":\"$RAW\"}" | grep -o '"id":"[^"]*"'

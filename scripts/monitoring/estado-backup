@@ -1,0 +1,34 @@
+#!/bin/bash
+# Comando simple para ver estado del backup
+
+echo "📊 ESTADO DEL BACKUP"
+echo "===================="
+echo ""
+
+# Estado actual
+if [ -f /var/log/backup/backup.status ]; then
+    echo "Estado:"
+    cat /var/log/backup/backup.status
+    echo ""
+fi
+
+# Daemon corriendo
+if pgrep -f backup-main-daemon > /dev/null; then
+    echo "✅ Daemon activo"
+else
+    echo "❌ Daemon detenido"
+fi
+echo ""
+
+# Últimos backups en Drive
+echo "Últimos backups en Drive:"
+rclone lsl gdrive:ubuntu-backups 2>/dev/null | tail -5
+echo ""
+
+# Email enviado hoy
+TODAY=$(date +%Y%m%d)
+if [ -f /var/log/backup/.email-sent-$TODAY ]; then
+    echo "✅ Email de hoy enviado"
+else
+    echo "⏳ Email pendiente"
+fi
